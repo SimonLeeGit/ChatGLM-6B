@@ -6,10 +6,11 @@
 *Read this in [English](README_en.md).
 
 ## 软件依赖
-运行微调需要4.27.1版本的`transformers`。除 ChatGLM-6B 的依赖之外，还需要安装以下依赖
+运行微调需要4.37.2版本的`transformers`。除 ChatGLM-6B 的依赖之外，还需要安装以下依赖
 ```
-pip install rouge_chinese nltk jieba datasets cpm_kernels sentencepiece
+pip install rouge_chinese nltk jieba datasets cpm_kernels sentencepiece transformers[torch]
 ```
+Note: 目前huggingface下载的模型是4.27.1的transformer训练的，无法兼容！！！
 ## 使用方法
 
 ### 下载数据集

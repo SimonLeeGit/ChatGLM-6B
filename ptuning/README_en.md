@@ -4,10 +4,11 @@ This repository implements tuning of the ChatGLM-6B model based on [P-Tuning v2]
 The following uses the [ADGEN](https://aclanthology.org/D19-1321.pdf) (advertising generation) dataset as an example to introduce how to use the code.
 
 ## Software dependencies
-Running p-tuning requires version 4.27.1 of `transformers`. In addition to the dependencies of ChatGLM-6B, the following dependencies are required
+Running p-tuning requires version 4.37.2 of `transformers`. In addition to the dependencies of ChatGLM-6B, the following dependencies are required
 ```
-pip install rouge_chinese nltk jieba datasets cpm_kernels sentencepiece
+pip install rouge_chinese nltk jieba datasets cpm_kernels sentencepiece transformers[torch]
 ```
+Note: The model downloaded from huggingface is trained by transformers 4.27.1. It still can not work!!!
 ## Instructions
 
 ### Download the dataset

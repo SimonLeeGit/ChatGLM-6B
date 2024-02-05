@@ -39,10 +39,8 @@ from tqdm.auto import tqdm
 # Integrations must be imported before ML frameworks:
 # isort: off
 from transformers.integrations import (
-    default_hp_search_backend,
     get_reporting_integration_callbacks,
     hp_params,
-    is_fairscale_available,
     is_optuna_available,
     is_ray_tune_available,
     is_sigopt_available,
@@ -74,7 +72,7 @@ from transformers.modelcard import TrainingSummary
 from transformers.modeling_utils import PreTrainedModel, load_sharded_checkpoint, unwrap_model
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES, MODEL_MAPPING_NAMES
 from transformers.optimization import Adafactor, get_scheduler
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS, is_torch_greater_or_equal_than_1_10, is_torch_less_than_1_11
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS, parsed_torch_version_base
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 from transformers.trainer_callback import (
     CallbackHandler,
@@ -117,11 +115,9 @@ from transformers.trainer_utils import (
     IntervalStrategy,
     PredictionOutput,
     RemoveColumnsCollator,
-    ShardedDDPOption,
     TrainerMemoryTracker,
     TrainOutput,
     default_compute_objective,
-    default_hp_space,
     denumpify_detensorize,
     enable_full_determinism,
     find_executable_batch_size,
@@ -154,7 +150,33 @@ from transformers.utils import (
 )
 from transformers.utils.generic import ContextManagers
 
+is_transformers_greater_or_equal_than_4_31 = version.parse(__version__) >= version.parse("4.31.0")
+is_transformers_greater_or_equal_than_4_33 = version.parse(__version__) >= version.parse("4.33.0")
+is_transformers_greater_or_equal_than_4_35 = version.parse(__version__) >= version.parse("4.35.0")
 
+if is_transformers_greater_or_equal_than_4_31:
+    from transformers.hyperparameter_search import default_hp_search_backend
+else:
+    from transformers.integrations import default_hp_search_backend
+
+if is_transformers_greater_or_equal_than_4_35:
+    def is_fairscale_available():
+        return False
+elif is_transformers_greater_or_equal_than_4_33:
+    from transformers.integrations.integration_utils import is_fairscale_available
+else:
+    from transformers.integrations import is_fairscale_available
+
+if is_fairscale_available():
+    from transformers.trainer_utils import ShardedDDPOption
+
+if is_transformers_greater_or_equal_than_4_31:
+    from transformers.hyperparameter_search import ALL_HYPERPARAMETER_SEARCH_BACKENDS
+else:
+    from transformers.trainer_utils import default_hp_space
+
+is_torch_greater_or_equal_than_1_10 = parsed_torch_version_base >= version.parse("1.10")
+is_torch_less_than_1_11 = parsed_torch_version_base < version.parse("1.11")
 _is_native_cpu_amp_available = is_torch_greater_or_equal_than_1_10
 
 DEFAULT_CALLBACKS = [DefaultFlowCallback]
@@ -2527,7 +2549,10 @@ class Trainer:
                 "To use hyperparameter search, you need to pass your model through a model_init function."
             )
 
-        self.hp_space = default_hp_space[backend] if hp_space is None else hp_space
+        if is_transformers_greater_or_equal_than_4_31:
+            self.hp_space = ALL_HYPERPARAMETER_SEARCH_BACKENDS[backend].default_hp_space if hp_space is None else hp_space
+        else:
+            self.hp_space = default_hp_space[backend] if hp_space is None else hp_space
         self.hp_name = hp_name
         self.compute_objective = default_compute_objective if compute_objective is None else compute_objective
 
